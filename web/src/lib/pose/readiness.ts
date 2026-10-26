@@ -23,6 +23,8 @@ export const READY_TEXT = {
   turnSide: { en: "Turn sideways to the camera.", hi: "कैमरे की तरफ साइड से खड़े हो जाओ।" },
   faceCamera: { en: "Face the camera.", hi: "कैमरे की तरफ मुँह करो।" },
   ready: { en: "Perfect position. Go when you're ready!", hi: "बढ़िया पोज़ीशन। जब तैयार हो, शुरू करो!" },
+  go: { en: "Perfect. Stay there. Let's start!", hi: "बढ़िया, ऐसे ही रहो। चलो शुरू करते हैं!" },
+  waiting: { en: "Take your time. I'll start counting as soon as you're in position.", hi: "आराम से। सही पोज़ीशन में आते ही गिनती शुरू होगी।" },
   lost: { en: "I lost you. Step back into view.", hi: "तुम फ्रेम से बाहर हो गए, वापस आओ।" },
 };
 

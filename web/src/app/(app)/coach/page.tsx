@@ -11,14 +11,14 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { PoseLandmarker } from "@mediapipe/tasks-vision";
 import { api, Exercise, Session } from "@/lib/api";
-import { allGuidance, cueText, ENGINES, Engine, guidance, Lang } from "@/lib/pose/engines";
+import { allGuidance, cueText, ENGINES, Engine, Lang, mistakeAdvice } from "@/lib/pose/engines";
 import { RepCounter, SetSummary } from "@/lib/pose/counter";
 import { bestSide, J, Landmark, SKELETON } from "@/lib/pose/geometry";
 import { PersonTracker } from "@/lib/pose/person";
 import { checkReadiness, READY_TEXT, stepBackText } from "@/lib/pose/readiness";
 import { allLines, countWord, line, remainingLine, remainingLines, secondsLine } from "@/lib/coachLines";
 import {
-  canListen, getVoiceGender, Gender, isMuted, listen, preload, setMuted, setVoiceGender, speak, stopSpeaking, unlockAudio,
+  canListen, getVoiceGender, Gender, isMuted, isSpeaking, listen, preload, setMuted, setVoiceGender, speak, stopSpeaking, unlockAudio,
 } from "@/lib/speech";
 import { useProfile } from "@/components/AuthGate";
 import { ErrorNote, GhostButton, inputClass, labelClass, PrimaryButton, Segmented, Spinner } from "@/components/ui";
@@ -95,7 +95,14 @@ function CoachScreen() {
   const lastSaid = useRef<Map<string, number>>(new Map());
   const cueShownAt = useRef(0);
   const readySince = useRef(0);
-  const mistakes = useRef<Map<string, number>>(new Map());
+  // Calm-coach memory for the current set: what has already been said, so nothing is nagged
+  const mistakeState = useRef<Map<string, { said: number; rep: number }>>(new Map());
+  const guideSaid = useRef<Set<string>>(new Set());
+  const posStart = useRef(0);
+  const reminderSaid = useRef(false);
+  const frameWarned = useRef(false);
+  const adviceUntil = useRef(0);
+  const cueTextRef = useRef<string | null>(null);
   const viewRef = useRef<LiveView>(EMPTY_VIEW);
   const flags = useRef({ target: false, lastTwo: false, rir: false, holdTick: 0, praiseEvery: 3 });
   const sessionIdRef = useRef<string | null>(params.get("session"));
@@ -206,27 +213,43 @@ function CoachScreen() {
   }
 
   // ---------- positioning ----------
+  // Each positioning tip is spoken once. One general reminder after 15 s. Otherwise the coach waits quietly.
   function handlePositioning(pose: Landmark[] | undefined, aspect: number, now: number, world?: Landmark[]) {
     const e = engineRef.current!;
     const l = settingsRef.current.lang;
     const check = checkReadiness(e, pose ? { lm: pose, aspect, world } : null, l);
     setGuideIfChanged(check.message);
+    const talking = isSpeaking(); // let the instructions finish before anything else
     if (check.ok) {
+      if (talking) {
+        readySince.current = 0;
+        return;
+      }
       if (!readySince.current) readySince.current = now;
       if (now - readySince.current > READY_HOLD_MS && pose) {
         trackerRef.current.lock(pose);
         counterRef.current = new RepCounter(e);
-        mistakes.current.clear();
+        mistakeState.current.clear();
+        frameWarned.current = false;
+        adviceUntil.current = 0;
+        cueTextRef.current = null;
         flags.current = { target: false, lastTwo: false, rir: false, holdTick: 0, praiseEvery: 2 + Math.floor(Math.random() * 2) };
         viewRef.current = EMPTY_VIEW;
         setView(EMPTY_VIEW);
         lastSaid.current.clear();
         goPhase("live");
-        speak(READY_TEXT.ready[l], l, true, "hype");
+        speak(READY_TEXT.go[l], l, true, "hype");
       }
     } else {
       readySince.current = 0;
-      sayOnce(check.message, now, { interrupt: false, cooldown: GUIDE_COOLDOWN_MS });
+      if (talking) return;
+      if (!guideSaid.current.has(check.key)) {
+        guideSaid.current.add(check.key);
+        speak(check.message, l);
+      } else if (!reminderSaid.current && now - posStart.current > 15000) {
+        reminderSaid.current = true;
+        speak(READY_TEXT.waiting[l], l);
+      }
     }
   }
 
@@ -247,7 +270,10 @@ function CoachScreen() {
     const prev = viewRef.current;
 
     if (!pose) {
-      if (trackerRef.current.lostFor(now) > 1500) sayOnce(READY_TEXT.lost[l], now, { cooldown: 6000 });
+      if (trackerRef.current.lostFor(now) > 2500 && !frameWarned.current) {
+        frameWarned.current = true; // said once per set, then the screen shows it
+        speak(READY_TEXT.lost[l], l);
+      }
       publish({ ...prev, visible: false });
       return;
     }
@@ -256,24 +282,40 @@ function CoachScreen() {
     if (!r.visible) {
       const side = bestSide({ lm: pose, aspect }, e.joints);
       const missing = e.joints.find((j) => (pose[J[j][side]].visibility ?? 1) < 0.5);
-      if (missing) sayOnce(stepBackText(missing, l), now, { cooldown: 6000 });
+      if (missing && !frameWarned.current) {
+        frameWarned.current = true;
+        speak(stepBackText(missing, l), l);
+      }
     }
+
+    /** Speak advice about a mistake at most twice per set (see mistakeAdvice). Always show the short cue on screen. */
+    const advise = (key: string) => {
+      cueTextRef.current = cueText(e, key, l);
+      cueShownAt.current = now;
+      const st = mistakeState.current.get(key);
+      let attempt: 1 | 2 | null = null;
+      if (!st) {
+        attempt = 1;
+        mistakeState.current.set(key, { said: 1, rep: counter.reps });
+      } else if (st.said === 1 && counter.reps - st.rep >= 5) {
+        attempt = 2;
+        st.said = 2;
+      }
+      if (!attempt) return;
+      const text = mistakeAdvice(e, key, attempt, l);
+      speak(text, l, true);
+      adviceUntil.current = now + Math.min(6000, 900 + text.length * 60);
+      cueTextRef.current = text;
+      setCoachLine(text);
+    };
 
     if (r.repDone) {
       const n = counter.reps;
-      // 1) the count, always first and instant
+      const busy = now < adviceUntil.current; // don't cut off advice that is still being spoken
       const count = countWord(n, l);
-      speak(count, l, true, "normal");
-      // 2) what happened on that rep: a fix if it was bad, otherwise "N more, you can do it!" / praise / motivation
+      speak(count, l, !busy, "normal");
       let extra = "";
-      let hype = true;
-      if (r.repBad && r.badKey) {
-        const times = (mistakes.current.get(r.badKey) ?? 0) + 1;
-        mistakes.current.set(r.badKey, times);
-        extra = guidance(e, r.badKey, times + 1, l); // the short shout already happened mid-rep, so go straight to HOW to fix it
-        hype = false;
-        cueShownAt.current = now;
-      } else {
+      if (!busy) {
         const rir = counter.rir();
         const rem = target ? target - n : null;
         if (rir !== null && rir <= 1 && n >= 4 && !flags.current.rir && (rem === null || rem > 1)) {
@@ -288,24 +330,16 @@ function CoachScreen() {
         } else {
           extra = n === 1 ? line("firstRep", l) : n % 2 === 0 ? line("praise", l) : line("struggle", l);
         }
+        if (extra) speak(extra, l, false, "hype");
+        setCoachLine(extra ? `${count}! ${extra}` : `${count}!`);
       }
-      if (extra) speak(extra, l, false, hype ? "hype" : "normal");
-      setCoachLine(extra ? `${count}! ${extra}` : `${count}!`);
     } else if (r.partialDone) {
-      const times = (mistakes.current.get("partial") ?? 0) + 1;
-      mistakes.current.set("partial", times);
-      const text = guidance(e, "partial", times, l);
-      if (sayOnce(text, now, { interrupt: true, cooldown: 2500 })) setCoachLine(text);
-      cueShownAt.current = now;
+      advise("partial");
     } else if (r.cueKey) {
-      const text = cueText(e, r.cueKey, l);
-      if (sayOnce(text, now, { interrupt: true, cooldown: 2500 })) {
-        cueShownAt.current = now;
-        setCoachLine(text);
-      }
+      advise(r.cueKey);
     } else if (r.struggle) {
       const text = line("struggle", l);
-      if (sayOnce(text, now, { interrupt: true, hype: true, cooldown: 2500 })) setCoachLine(text);
+      if (now >= adviceUntil.current && sayOnce(text, now, { interrupt: true, hype: true, cooldown: 2500 })) setCoachLine(text);
     } else if (r.idle) {
       const text = line("idle", l);
       if (sayOnce(text, now, { cooldown: 15000 })) setCoachLine(text);
@@ -319,14 +353,13 @@ function CoachScreen() {
       if (hold >= 20) speak(line("holdPush", l), l, false, "hype");
     }
 
-    const warning = now - cueShownAt.current < 1500;
-    const cueKey = r.cueKey ?? (r.repBad ? r.badKey : null);
+    const showCue = now - cueShownAt.current < 3500;
     publish({
       visible: r.visible,
       reps: counter.reps,
       bad: counter.badReps,
       partial: counter.partial,
-      cue: r.repBad && r.badKey ? guidance(e, r.badKey, (mistakes.current.get(r.badKey) ?? 1) + 1, l) : cueKey ? cueText(e, cueKey, l) : warning ? prev.cue : null,
+      cue: showCue ? cueTextRef.current : null,
       rir: counter.rir(),
       hold,
       holding: r.holding,
@@ -401,6 +434,7 @@ function CoachScreen() {
       ...e.joints.map((j) => stepBackText(j, lang)), ...[10, 20, 30, 40, 50, 60].map((n) => secondsLine(n, lang))];
     const countdown = Array.from({ length: Number(targetReps) || 0 }, (_, i) => remainingLines(i + 1, lang)).flat();
     void preload(countdown, lang, "hype");
+    void preload([`${e.setupTip[lang]} ${e.howTo[lang]} ${e.startHint[lang]} ${READY_TEXT.waiting[lang]}`], lang, "normal");
     void preload([...numbers, ...cues], lang, "normal");
     void preload(allLines(lang), lang, "hype");
   }
@@ -416,11 +450,17 @@ function CoachScreen() {
     trackerRef.current.unlock();
     readySince.current = 0;
     guideRef.current = "";
+    guideSaid.current.clear();
+    reminderSaid.current = false;
+    posStart.current = performance.now();
     setGuide(READY_TEXT.intro[lang]);
     pausedRef.current = false;
     setPaused(false);
     goPhase("positioning");
-    if (intro) speak(`${READY_TEXT.intro[lang]} ${engine?.startHint[lang] ?? ""}`, lang, true);
+    if (intro && engine) {
+      // Explain everything ONCE: camera placement, how to do the movement, start position.
+      speak(`${engine.setupTip[lang]} ${engine.howTo[lang]} ${engine.startHint[lang]} ${READY_TEXT.waiting[lang]}`, lang, true);
+    }
   }
 
   async function start() {
@@ -696,6 +736,7 @@ function CoachScreen() {
           <div role="status" className="rounded-3xl border border-lime/60 bg-ground/85 p-4">
             <p className="text-xs font-semibold uppercase tracking-widest text-lime">{t("Get into position", "पोज़ीशन में आओ")}</p>
             <p className="mt-1 text-lg font-semibold leading-snug">{guide}</p>
+            <p className="mt-2 text-sm leading-relaxed text-soft">{engine.howTo[lang]}</p>
             <p className="mt-2 text-xs text-muted">{t("Take your time. Counting starts automatically when you're ready. People in the background are ignored.", "आराम से तैयार हो। सही पोज़ीशन होते ही गिनती अपने आप शुरू होगी। पीछे के लोगों को नज़रअंदाज़ किया जाएगा।")}</p>
           </div>
           {coachLine && (

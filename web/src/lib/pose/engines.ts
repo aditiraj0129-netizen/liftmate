@@ -28,6 +28,7 @@ export type Engine = {
   mover: Joint; // the body part that must really travel during a rep (stops fake reps from jitter)
   setupTip: Text;
   startHint: Text;
+  howTo: Text; // spoken once before the first set: how to do the movement
   anyStart?: boolean;
   joints: Joint[]; // must be visible
   metric: (f: Frame, s: number) => number;
@@ -74,6 +75,7 @@ export const ENGINES: Record<string, Engine> = {
   squat: {
     id: "squat", mode: "reps", view: "side", mover: "hip", setupTip: HEAD_TO_KNEES,
     startHint: T("Stand tall to start.", "शुरू करने के लिए सीधे खड़े हो जाओ।"),
+    howTo: T("Feet shoulder-width apart, chest up. Sit your hips down until they reach knee level, then drive up through your whole foot.", "पैर कंधों जितने खुले, छाती ऊपर। हिप्स घुटनों की ऊँचाई तक नीचे बैठाओ, फिर पूरे पैर से ज़ोर लगाकर ऊपर आओ।"),
     joints: ["shoulder", "hip", "knee"],
     metric: knee, start: "extended", high: 160, low: 100, concentric: "back",
     partialCue: T("Go a little deeper!", "थोड़ा और नीचे!"),
@@ -90,6 +92,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "pushup", mode: "reps", view: "side", mover: "shoulder",
     setupTip: T("Phone on the floor, 2 metres to your side. Head to knees in frame is enough.", "फ़ोन ज़मीन पर, 2 मीटर साइड में। सिर से घुटनों तक दिखना काफ़ी है।"),
     startHint: T("Get into the top of a push-up, arms straight.", "पुश-अप की ऊपर वाली पोज़ीशन में आओ, बाँहें सीधी।"),
+    howTo: T("Hands under your shoulders, body in one straight line. Lower your chest close to the floor, then push back up.", "हाथ कंधों के नीचे, शरीर एक सीधी लाइन में। छाती ज़मीन के पास लाओ, फिर वापस ऊपर धकेलो।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "extended", high: 155, low: 95, concentric: "back",
     partialCue: T("Go lower!", "और नीचे!"),
@@ -110,6 +113,7 @@ export const ENGINES: Record<string, Engine> = {
   curl: {
     id: "curl", mode: "reps", view: "any", mover: "wrist", setupTip: UPPER_BODY,
     startHint: T("Arms straight down by your sides.", "बाँहें सीधी नीचे, साइड में रखो।"),
+    howTo: T("Elbows fixed at your sides. Curl the weight up to your shoulders, squeeze, then lower slowly until your arms are straight.", "कोहनियाँ साइड में टिकी रहें। वज़न कंधों तक उठाओ, दबाओ, फिर धीरे-धीरे बाँहें सीधी होने तक नीचे लाओ।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "extended", high: 150, low: 60, concentric: "out",
     partialCue: T("Full range!", "पूरी रेंज!"),
@@ -132,6 +136,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "press_overhead", mode: "reps", view: "any", mover: "wrist",
     setupTip: UPPER_BODY,
     startHint: T("Weights at shoulder height.", "वज़न कंधों की ऊँचाई पर रखो।"),
+    howTo: T("Start with the weights at shoulder height. Press straight up until your arms are locked out, then lower back to your shoulders.", "वज़न कंधों पर रखकर शुरू करो। बाँहें पूरी सीधी होने तक ऊपर प्रेस करो, फिर वापस कंधों तक लाओ।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "flexed", high: 155, low: 90, concentric: "out",
     partialCue: T("All the way up!", "पूरा ऊपर!"),
@@ -147,6 +152,7 @@ export const ENGINES: Record<string, Engine> = {
   pulldown: {
     id: "pulldown", mode: "reps", view: "any", mover: "wrist", setupTip: UPPER_BODY,
     startHint: T("Arms straight up, holding the bar.", "बार पकड़कर बाँहें ऊपर सीधी रखो।"),
+    howTo: T("Sit tall and hold the bar with straight arms. Pull your elbows down until the bar reaches your upper chest, then let it rise slowly.", "सीधे बैठो, बार सीधी बाँहों से पकड़ो। कोहनियाँ नीचे खींचो जब तक बार ऊपरी छाती तक आए, फिर धीरे ऊपर जाने दो।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "extended", high: 150, low: 80, concentric: "out",
     partialCue: T("Pull to your chest!", "छाती तक खींचो!"),
@@ -163,6 +169,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "leg_press", mode: "reps", view: "side", mover: "knee",
     setupTip: T("Phone to the side of the machine, hips, knees and feet in frame.", "फ़ोन मशीन के साइड में, हिप्स, घुटने और पैर दिखें।"),
     startHint: T("Legs extended, knees soft.", "पैर सीधे, घुटने हल्के मुड़े हुए।"),
+    howTo: T("Back flat on the pad, feet shoulder-width on the platform. Lower until your knees come towards your chest, then push back up without locking your knees.", "कमर पैड पर टिकी, पैर प्लेटफ़ॉर्म पर कंधों जितने खुले। घुटने छाती की तरफ लाओ, फिर बिना घुटने लॉक किए वापस धकेलो।"),
     joints: ["hip", "knee", "ankle"],
     metric: kneeStrict, start: "extended", high: 155, low: 95, concentric: "back",
     partialCue: T("Go deeper!", "और गहराई तक!"),
@@ -183,6 +190,7 @@ export const ENGINES: Record<string, Engine> = {
   lunge: {
     id: "lunge", mode: "reps", view: "side", mover: "hip", setupTip: HEAD_TO_KNEES,
     startHint: T("Stand tall, feet hip-width apart.", "सीधे खड़े हो, पैर कमर जितने खुले।"),
+    howTo: T("Stand tall, step forward and lower your back knee towards the floor, then push back up to standing.", "सीधे खड़े हो, एक कदम आगे लो और पीछे वाला घुटना ज़मीन की तरफ लाओ, फिर वापस खड़े हो जाओ।"),
     joints: ["shoulder", "hip", "knee"],
     metric: (f) => Math.min(knee(f, 0), knee(f, 1)), start: "extended", high: 160, low: 105, concentric: "back",
     partialCue: T("Lower!", "और नीचे!"),
@@ -198,6 +206,7 @@ export const ENGINES: Record<string, Engine> = {
   hinge: {
     id: "hinge", mode: "reps", view: "side", mover: "shoulder", anyStart: true, setupTip: HEAD_TO_KNEES,
     startHint: T("Set up at the bar.", "बार के पास पोज़ीशन लो।"),
+    howTo: T("Soft knees, flat back. Push your hips back and lower the bar along your legs, then squeeze your glutes to stand tall.", "घुटने हल्के मुड़े, पीठ सीधी। हिप्स पीछे धकेलो और बार पैरों से सटाकर नीचे लाओ, फिर ग्लूट्स दबाकर सीधे खड़े हो।"),
     joints: ["shoulder", "hip", "knee"],
     metric: hip, start: "extended", high: 160, low: 110, concentric: "back",
     partialCue: T("Hips back more!", "हिप्स और पीछे!"),
@@ -224,6 +233,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "lateral_raise", mode: "reps", view: "front", mover: "elbow",
     setupTip: T("Face the phone, 2 metres away. Head to hips in frame is enough.", "फ़ोन की तरफ मुँह करो, 2 मीटर दूर। सिर से हिप्स तक दिखना काफ़ी है।"),
     startHint: T("Arms down by your sides.", "बाँहें नीचे साइड में रखो।"),
+    howTo: T("Stand tall with the weights at your sides. Raise your arms out to shoulder height, then lower slowly.", "सीधे खड़े हो, वज़न साइड में। बाँहें साइड से कंधे की ऊँचाई तक उठाओ, फिर धीरे नीचे लाओ।"),
     joints: ["shoulder", "elbow", "hip"],
     metric: (f, s) => angle(p(f, "hip", s), p(f, "shoulder", s), p(f, "elbow", s)),
     start: "flexed", high: 80, low: 30, concentric: "out",
@@ -246,6 +256,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "bench", mode: "reps", view: "side", mover: "wrist",
     setupTip: T("Phone to your side at bench height, shoulders, elbows and wrists in frame.", "फ़ोन बेंच की ऊँचाई पर साइड में, कंधे, कोहनी और कलाई दिखें।"),
     startHint: T("Arms straight, weight over your chest.", "बाँहें सीधी, वज़न छाती के ऊपर।"),
+    howTo: T("Feet flat, shoulder blades squeezed together. Lower the bar to your chest with control, then press it back up.", "पैर ज़मीन पर, कंधों के ब्लेड पीछे दबे। बार कंट्रोल से छाती तक लाओ, फिर वापस ऊपर प्रेस करो।"),
     joints: ["shoulder", "elbow", "wrist"],
     metric: elbow, start: "extended", high: 150, low: 90, concentric: "back",
     partialCue: T("Touch your chest!", "छाती तक!"),
@@ -266,6 +277,7 @@ export const ENGINES: Record<string, Engine> = {
   pushdown: {
     id: "pushdown", mode: "reps", view: "any", mover: "wrist", setupTip: UPPER_BODY,
     startHint: T("Elbows at your sides, forearms up.", "कोहनियाँ साइड में, हाथ ऊपर।"),
+    howTo: T("Elbows pinned to your sides. Push the bar down until your arms are straight, squeeze, then let it come back up slowly.", "कोहनियाँ साइड में टिकी। बार नीचे धकेलो जब तक बाँहें सीधी हों, दबाओ, फिर धीरे ऊपर आने दो।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "flexed", high: 155, low: 90, concentric: "out",
     partialCue: T("Straighten fully!", "पूरा सीधा!"),
@@ -287,6 +299,7 @@ export const ENGINES: Record<string, Engine> = {
   row_bent: {
     id: "row_bent", mode: "reps", view: "side", mover: "wrist", setupTip: HEAD_TO_KNEES,
     startHint: T("Hinge over, arms hanging straight.", "आगे झुको, बाँहें सीधी लटकी हुई।"),
+    howTo: T("Hinge forward with a flat back. Pull the bar to your belly button, squeeze your back, then lower slowly.", "पीठ सीधी रखकर आगे झुको। बार नाभि तक खींचो, पीठ दबाओ, फिर धीरे नीचे लाओ।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "extended", high: 150, low: 85, concentric: "out",
     partialCue: T("Pull to your belly!", "पेट तक खींचो!"),
@@ -307,6 +320,7 @@ export const ENGINES: Record<string, Engine> = {
   row_seated: {
     id: "row_seated", mode: "reps", view: "side", mover: "wrist", setupTip: UPPER_BODY,
     startHint: T("Sit tall, arms straight forward.", "सीधे बैठो, बाँहें आगे सीधी।"),
+    howTo: T("Sit tall, arms straight. Pull the handle to your stomach and squeeze your shoulder blades, then return slowly.", "सीधे बैठो, बाँहें सीधी। हैंडल पेट तक खींचो और कंधों के ब्लेड दबाओ, फिर धीरे वापस जाओ।"),
     joints: ["shoulder", "elbow", "wrist", "hip"],
     metric: elbow, start: "extended", high: 150, low: 85, concentric: "out",
     partialCue: T("To your stomach!", "पेट तक!"),
@@ -323,6 +337,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "leg_extension", mode: "reps", view: "side", mover: "ankle",
     setupTip: T("Phone to the side of the machine, hip, knee and ankle in frame.", "फ़ोन मशीन के साइड में, हिप, घुटना और टखना दिखें।"),
     startHint: T("Sit back, knees bent.", "पीछे टिककर बैठो, घुटने मुड़े।"),
+    howTo: T("Sit back against the pad. Straighten your legs fully, squeeze your thighs, then lower slowly.", "पैड से टिककर बैठो। पैर पूरे सीधे करो, जांघें दबाओ, फिर धीरे नीचे लाओ।"),
     joints: ["hip", "knee", "ankle"],
     metric: kneeStrict, start: "flexed", high: 160, low: 95, concentric: "out",
     partialCue: T("Straighten fully!", "पूरा सीधा!"),
@@ -336,6 +351,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "leg_curl", mode: "reps", view: "side", mover: "ankle",
     setupTip: T("Phone to the side of the machine, hip, knee and ankle in frame.", "फ़ोन मशीन के साइड में, हिप, घुटना और टखना दिखें।"),
     startHint: T("Legs straight to start.", "शुरू में पैर सीधे रखो।"),
+    howTo: T("Hips pressed into the pad. Curl your heels towards your glutes, squeeze, then lower slowly.", "हिप्स पैड पर दबे रहें। एड़ियाँ ग्लूट्स की तरफ मोड़ो, दबाओ, फिर धीरे नीचे लाओ।"),
     joints: ["hip", "knee", "ankle"],
     metric: kneeStrict, start: "extended", high: 155, low: 85, concentric: "out",
     partialCue: T("Heels closer!", "एड़ियाँ और पास!"),
@@ -349,6 +365,7 @@ export const ENGINES: Record<string, Engine> = {
     id: "plank", mode: "hold", view: "side", mover: "hip",
     setupTip: T("Phone on the floor, 2 metres to your side. Head to knees in frame is enough.", "फ़ोन ज़मीन पर, 2 मीटर साइड में। सिर से घुटनों तक दिखना काफ़ी है।"),
     startHint: T("Get into your plank.", "प्लैंक पोज़ीशन में आओ।"),
+    howTo: T("Elbows under your shoulders, body straight from head to heels. Squeeze your core and hold.", "कोहनियाँ कंधों के नीचे, सिर से एड़ी तक शरीर सीधा। कोर टाइट करो और होल्ड करो।"),
     joints: ["shoulder", "hip", "knee"],
     metric: bodyLine, start: "extended", high: 180, low: 150, concentric: "out",
     partialCue: T("", ""), partialFixes: [],
@@ -396,9 +413,26 @@ export function guidance(engine: Engine, key: string, times: number, lang: Lang)
   return fixes[(times - 2) % fixes.length][lang];
 }
 
+/**
+ * What the coach says about a mistake. A real coach doesn't nag:
+ *  attempt 1 = the first time it happens: short cue + how to fix it
+ *  attempt 2 = only if it is still happening 5+ reps later: one reminder with another tip
+ * After that the coach stays quiet about it and covers it in the review after the set.
+ */
+export function mistakeAdvice(engine: Engine, key: string, attempt: 1 | 2, lang: Lang): string {
+  const fixes = key === "partial" ? engine.partialFixes : engine.rules.find((r) => r.id === key)?.fixes ?? [];
+  const cue = cueText(engine, key, lang);
+  if (attempt === 1) return fixes[0] ? `${cue} ${fixes[0][lang]}` : cue;
+  const tip = (fixes[1] ?? fixes[0])?.[lang] ?? cue;
+  return lang === "hi" ? `याद रखो, ${tip}` : `Remember, ${tip}`;
+}
+
 /** Every fix sentence, for preloading the voice. */
 export function allGuidance(engine: Engine, lang: Lang): string[] {
+  const keys = ["partial", ...engine.rules.map((r) => r.id)];
   return [
+    engine.howTo[lang],
+    ...keys.flatMap((k) => [mistakeAdvice(engine, k, 1, lang), mistakeAdvice(engine, k, 2, lang)]),
     engine.partialCue[lang], ...engine.partialFixes.map((t) => t[lang]),
     ...engine.rules.flatMap((r) => [r.cue[lang], ...r.fixes.map((t) => t[lang])]),
   ].filter(Boolean);

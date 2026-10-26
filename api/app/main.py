@@ -16,6 +16,8 @@ allowed = {settings.frontend_url.rstrip("/"), "http://localhost:3000", "http://1
 app.add_middleware(
     CORSMiddleware,
     allow_origins=sorted(allowed),
+    # also allow every Vercel link of this project (main + preview links like liftmate-abc123-....vercel.app)
+    allow_origin_regex=r"https://liftmate[a-z0-9-]*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
