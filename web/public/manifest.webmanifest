@@ -1,0 +1,10 @@
+{
+  "name": "Liftmate",
+  "short_name": "Liftmate",
+  "description": "Your AI lifting partner",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0d0c",
+  "theme_color": "#0b0d0c",
+  "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

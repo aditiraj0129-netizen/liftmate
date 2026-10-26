@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* Liftmate design tokens: dark gym theme, one electric-lime accent, amber for warnings. */
+@theme {
+  --color-ground: #0b0d0c;
+  --color-surface: #151917;
+  --color-surface2: #1e2420;
+  --color-line: #262c28;
+  --color-ink: #f2f5f1;
+  --color-soft: #c9d1cc;
+  --color-muted: #9aa59e;
+  --color-lime: #c6f432;
+  --color-lime-soft: #e2ff8a;
+  --color-amber: #ffb547;
+  --color-amber-deep: #3a2a12;
+  --color-danger: #ff6b5e;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+html,
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-tap-highlight-color: transparent;
+}
+
+input,
+textarea,
+select {
+  color-scheme: dark;
+}
+
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 2px;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

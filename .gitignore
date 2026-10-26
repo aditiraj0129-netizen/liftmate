@@ -1,0 +1,16 @@
+# secrets
+api/.env
+web/.env.local
+# python
+api/.venv/
+__pycache__/
+# node
+web/node_modules/
+web/.next/
+web/public/mediapipe/
+web/next-env.d.ts
+*.tsbuildinfo
+
+.venv/
+api/.tts_cache/
+.DS_Store
