@@ -1,19 +1,20 @@
-# Liftmate — your lifting partner
+https://liftmate-neon.vercel.app/ 
+Liftmate — your lifting partner
 
 AI gym coach web app (works on phone and laptop):
 
-- **Live AI Coach** – camera watches you train, counts reps, catches form mistakes, speaks cues, senses when you are close to failure, and logs every set automatically.
-- **New Session planner** – a 30-second check-in (food, energy, sleep, soreness, time) and the AI builds today's plan around your Mon–Sun week.
-- **Machine Guide** – photograph any gym machine or its printed sticker; get simple English/Hindi setup steps, then train on it with the live coach. Each scan is shared with members of your gym.
-- **AI Nutritionist** – log food by typing or voice, see calories and protein left, ask anything ("heavy lunch, gym in 2 hours?") in English, Hindi or Hinglish, and get a full weekly meal plan for veg / non-veg / egg / vegan / Jain diets.
-- **Gym community** – pick your gym on the map, find people who train there, send connection requests.
-- **Memory** – the coaches remember what you tell them (injuries, food dislikes, goals) and see your whole training week.
+Live AI Coach** – camera watches you train, counts reps, catches form mistakes, speaks cues, senses when you are close to failure, and logs every set automatically.
+New Session planner** – a 30-second check-in (food, energy, sleep, soreness, time) and the AI builds today's plan around your Mon–Sun week.
+- Machine Guide** – photograph any gym machine or its printed sticker; get simple English/Hindi setup steps, then train on it with the live coach. Each scan is shared with members of your gym.
+- AI Nutritionist** – log food by typing or voice, see calories and protein left, ask anything ("heavy lunch, gym in 2 hours?") in English, Hindi or Hinglish, and get a full weekly meal plan for veg / non-veg / egg / vegan / Jain diets.
+- Gym community** – pick your gym on the map, find people who train there, send connection requests.
+- Memory – the coaches remember what you tell them (injuries, food dislikes, goals) and see your whole training week.
 
 Everything runs on **free tiers** (₹0 to build and beta-test).
 
 ---
 
-## Folder structure
+ Folder structure
 
 ```
 liftmate/
@@ -35,9 +36,9 @@ liftmate/
 
 ---
 
-## Setup (about 15 minutes, one time)
+Setup (about 15 minutes, one time)
 
-You need: **Node.js 20+**, **Python 3.11+**, a free **Supabase** account and a free **Google AI Studio** account.
+You need:*Node.js 20+**, **Python 3.11+**, a free **Supabase** account and a free **Google AI Studio** account.
 
 ### 1. Create the database
 
@@ -55,7 +56,7 @@ You need: **Node.js 20+**, **Python 3.11+**, a free **Supabase** account and a f
 | Gemini API key | aistudio.google.com/apikey → Create API key | `api/.env` |
 | Groq key (optional backup AI) | console.groq.com/keys | `api/.env` |
 
-### 3. Fill in the two env files
+ 3. Fill in the two env files
 
 `api/.env`
 ```
@@ -76,7 +77,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 > **Already set up before the voice update?** Run `supabase/migration_002_voice_coach.sql` once in the Supabase SQL Editor, and run `pip install -r requirements.txt` again in `api`.
 
-### 4. Start the backend (terminal 1)
+ 4. Start the backend (terminal 1)
 
 macOS / Linux:
 ```bash
@@ -101,7 +102,7 @@ uvicorn app.main:app --reload --port 8000
 Check: open http://localhost:8000/health → `{"status":"ok","app":"liftmate","ai_configured":true}`.
 All API endpoints are listed at http://localhost:8000/docs.
 
-### 5. Start the web app (terminal 2)
+5. Start the web app (terminal 2)
 
 ```bash
 cd web
@@ -120,7 +121,7 @@ The camera and microphone only work on `https://` or `localhost`. Easiest free o
 
 ---
 
-## How the Live Coach works
+ How the Live Coach works
 
 ```
 Camera ──> MediaPipe Pose (on the phone, ~25 frames/sec, video never leaves the device)
@@ -129,27 +130,27 @@ Camera ──> MediaPipe Pose (on the phone, ~25 frames/sec, video never leaves 
        ──> At set end: summary ──> backend AI (Gemini) ──> spoken coaching + saved to Daily Activity
 ```
 
-- **37 exercises** have live AI coaching across barbell, dumbbell, machine, cable, bodyweight and holds (squat, bench, deadlift, RDL, curls, presses, lat pulldown, rows, leg press, leg extension/curl, lunges, push-ups, pull-ups, dips, plank and more). The other ~500 exercises have guides and manual logging.
-- **"How much more can you push?"** – the coach times the lifting part of every rep. When reps get 30–50% slower than your first reps, it tells you how many strong reps are left, then says when you are at your limit.
+- 37 exercises** have live AI coaching across barbell, dumbbell, machine, cable, bodyweight and holds (squat, bench, deadlift, RDL, curls, presses, lat pulldown, rows, leg press, leg extension/curl, lunges, push-ups, pull-ups, dips, plank and more). The other ~500 exercises have guides and manual logging.
+- "How much more can you push?"** – the coach times the lifting part of every rep. When reps get 30–50% slower than your first reps, it tells you how many strong reps are left, then says when you are at your limit.
 - **Camera tip:** side view for squats, deadlifts, rows, curls and leg machines; front view for overhead press and lateral raises. The coach tells you when you are out of frame.
 - To add an exercise to the live coach: set its `engine` column in Supabase to one of `squat, pushup, curl, press_overhead, pulldown, leg_press, lunge, hinge, lateral_raise, bench, pushdown, row_bent, row_seated, leg_extension, leg_curl, plank`.
 
 ---
 
-## Coach voice
+ Coach voice
 
 - The coach uses realistic Microsoft neural voices made for India: **Neerja / Prabhat** (Indian English) and **Swara / Madhur** (Hindi). Pick female or male, English or हिंदी, on the Live Coach start screen.
 - Hindi lines and AI replies are written in Devanagari so the Hindi voice pronounces them naturally.
 - Default: the free `edge-tts` library, no key needed (good for building and beta). It is not an official Microsoft API, so before launching publicly add an official **Azure Speech** key (free 0.5M characters/month, same voices): set `AZURE_SPEECH_KEY` and `AZURE_SPEECH_REGION` in `api/.env`.
 - Clips are cached in `api/.tts_cache`, so counts and cues play instantly. If the voice service is unreachable, the app falls back to the browser voice automatically.
 
-## Live Coach flow
+ Live Coach flow
 
 1. **Get into position** – the coach tells you exactly what to fix (step into view, step back because your feet aren't visible, turn sideways, stand tall to start). Counting starts automatically once you hold the right position for about a second. People in the background are ignored: the coach locks onto you.
 2. **During the set** – counts every rep out loud, calls out **bad reps** (counted, but with the fix: "Seven. Chest up!"), half reps, shouts motivation when a rep is grinding ("Come on! Push!"), praises clean reps, warns near failure, and checks in if you pause too long.
 3. **After the set** – clean vs bad rep count (you can correct the numbers), good points, what to improve, spoken AI feedback, and you can talk back to your coach by voice or text. Then a spoken rest timer, and "Next set" brings back the get-ready guide.
 
-## Phases
+ Phases
 
 | Phase | What | Status in this code |
 | --- | --- | --- |
@@ -163,18 +164,16 @@ Camera ──> MediaPipe Pose (on the phone, ~25 frames/sec, video never leaves 
 
 ---
 
-## Free-tier limits to know
+ Free-tier limits to know
 
 - **Gemini free tier:** enough for building and a small beta. It does **not allow commercial use** and Google may use prompts to improve models. Before charging users, enable billing in Google AI Studio (pay-per-use, no monthly fee). Only `api/app/ai.py` talks to the AI, so switching is easy.
 - **Render free:** the API sleeps after ~15 min idle; the first request after that takes ~30 s.
 - **Supabase free:** 500 MB database; the project pauses after 1 week without activity (just resume it in the dashboard).
-- **OpenStreetMap search:** about 1 search per second; fine for gym picking.
-
-## Safety
+- **OpenStreetMap search:** about 1 search per second; fine for gym picking.Safety
 
 Liftmate gives general fitness and nutrition guidance, not medical advice. The AI is instructed never to encourage training through pain and to send users to a doctor or physiotherapist for red-flag symptoms. Minimum age 16.
 
-## Troubleshooting
+Troubleshooting
 
 | Problem | Fix |
 | --- | --- |
